@@ -1,0 +1,12 @@
+body {
+    margin: 0;
+    background-color: #f1f1f1;
+}
+
+button{
+    user-select: none;
+}
+
+.footer li {
+    margin: 0.5rem 0.2rem;
+}
