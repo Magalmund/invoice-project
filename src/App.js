@@ -7,10 +7,17 @@ import Client from "./components/detailsClient/client";
 import Main from "./components/detailsMain/main";
 import Header from "./components/header/header";
 import TableForm from "./components/tableForm/TableForm";
-import {useState} from "react";
+import {useState, useRef} from "react";
+import ReactToPrint from "react-to-print"
 
 
 function App() {
+    const setDate = (input) => {
+        let someDate = new Date();
+        someDate.setDate(someDate.getDate() + input);
+        let date = someDate.toISOString().substr(0, 10);
+        return date
+    }
     const [showInvoice, setShowInvoice] = useState(false)
     const [name, setName] = useState("")
     const [address, setAddress] = useState("")
@@ -22,32 +29,43 @@ function App() {
     const [clientName, setClientName] = useState("")
     const [clientAddress, setClientAddress] = useState("")
     const [invoiceNumber, setInvoiceNumber] = useState("")
-    const [invoiceDate, setInvoiceDate] = useState("")
-    const [dueDate, setDueDate] = useState("")
+    const [invoiceDate, setInvoiceDate] = useState(setDate(0))
+    const [dueDate, setDueDate] = useState(setDate(7))
     const [notes, setNotes] = useState("")
     const [description, setDescription] = useState("")
-    const [quantity, setQuantity] = useState("")
+    const [quantity, setQuantity] = useState(1)
     const [price, setPrice] = useState("")
     const [amount, setAmount] = useState("")
     const [list, setList] = useState([])
     const [total, setTotal] = useState(0)
+
+    const componentRef = useRef()
+
     const handlePrint = () => {
         window.print()
     }
+
     return (
         <div>
             <main className="m-5 p-5 md:max-w-xl md:mx-auto lg:max-w-2xl xl:max-w-4xl bg-white rounded shadow">
                 {showInvoice
                     ?
                     <div>
-                        <Header handlePrint={handlePrint}/>
-                        <Main name={name} address={address}/>
-                        <Client clientName={clientName} clientAddress={clientAddress}/>
-                        <Dates invoiceNumber={invoiceNumber} invoiceDate={invoiceDate} dueDate={dueDate}/>
-                        <Table description={description} quantity={quantity} price={price} amount={amount} list={list} setlist={setList} total={total} setTotal={setTotal}/>
-                        <Notes notes={notes}/>
-                        <Footer name={name} address={address} website={website} email={email} phone={phone}
-                                bankAccount={bankAccount} bankName={bankName}/>
+                        <ReactToPrint
+                            trigger={() => <button className="ml-5 bg-blue-500 text-white font-bold py-2 px-8 rounded shadow border-2 border-blue-500 hover:bg-transparent hover:text-blue-500 transition-all duration-300">Print / Download</button>}
+                            content={() => componentRef.current}
+                        />
+                        <div ref={componentRef} className="p-5">
+                            <Header handlePrint={handlePrint}/>
+                            <Main name={name} address={address}/>
+                            <Client clientName={clientName} clientAddress={clientAddress}/>
+                            <Dates invoiceNumber={invoiceNumber} invoiceDate={invoiceDate} dueDate={dueDate}/>
+                            <Table description={description} quantity={quantity} price={price} amount={amount}
+                                   list={list} setlist={setList} total={total} setTotal={setTotal}/>
+                            <Notes notes={notes}/>
+                            <Footer name={name} address={address} website={website} email={email} phone={phone}
+                                    bankAccount={bankAccount} bankName={bankName}/>
+                        </div>
                         <button onClick={() => setShowInvoice(false)}
                                 className=" mt-5 bg-blue-500 text-white font-bold py-2 px-8 rounded shadow border-2 border-blue-500 hover:bg-transparent hover:text-blue-500 transition-all duration-300">Edit
                             information
@@ -65,6 +83,7 @@ function App() {
                                         id="name"
                                         placeholder="Enter your name"
                                         autoComplete="off"
+                                        maxLength="32"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}/>
                                 </div>
@@ -136,7 +155,7 @@ function App() {
                                         onChange={(e) => setBankAccount(e.target.value)}/>
                                 </div>
                             </article>
-
+                            {/*Client part*/}
                             <article className="md:grid grid-cols-2 gap-10 md:mt-20">
                                 <div className="flex flex-col">
                                     <label htmlFor="clientName">Enter your client's name</label>
@@ -145,7 +164,9 @@ function App() {
                                         name="client name"
                                         id="client name"
                                         placeholder="Enter your client's name"
-                                        autoComplete="off" value={clientName}
+                                        autoComplete="off"
+                                        maxLength="32"
+                                        value={clientName}
                                         onChange={(e) => setClientName(e.target.value)}/>
                                 </div>
                                 <div className="flex flex-col">
@@ -155,7 +176,9 @@ function App() {
                                         name="clientAddress"
                                         id="clientAddress"
                                         placeholder="Enter your client's address"
-                                        autoComplete="off" value={clientAddress}
+                                        autoComplete="off"
+                                        maxLength="32"
+                                        value={clientAddress}
                                         onChange={(e) => setClientAddress(e.target.value)}/>
                                 </div>
                             </article>
@@ -168,7 +191,8 @@ function App() {
                                         name="invoiceNumber"
                                         id="invoiceNumber"
                                         placeholder="Invoice number"
-                                        autoComplete="off" value={invoiceNumber}
+                                        autoComplete="off"
+                                        value={invoiceNumber}
                                         onChange={(e) => setInvoiceNumber(e.target.value)}/>
                                 </div>
                                 <div className="flex flex-col">
@@ -194,7 +218,6 @@ function App() {
                             </article>
 
 
-
                             {/*This is our table form*/}
                             <article>
                                 <TableForm
@@ -211,7 +234,6 @@ function App() {
                                     total={total} setTotal={setTotal}
                                 />
                             </article>
-
 
 
                             <label htmlFor="notes">Additional notes</label>

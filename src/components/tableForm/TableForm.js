@@ -23,19 +23,23 @@ const TableForm = ({
     const handleSubmit = (e) => {
         e.preventDefault()
 
-        const newItems = {
-            id: uuidv4(),
-            description,
-            quantity,
-            price,
-            amount
+        if (!description || !quantity || !price) {
+            alert("Please fill all inputs")
+        } else {
+            const newItems = {
+                id: uuidv4(),
+                description,
+                quantity,
+                price,
+                amount
+            }
+            setDescription("")
+            setQuantity("")
+            setPrice("")
+            setAmount("")
+            setList([...list, newItems])
+            setIsEditing(false)
         }
-        setDescription("")
-        setQuantity("")
-        setPrice("")
-        setAmount("")
-        setList([...list, newItems])
-        setIsEditing(false)
     }
     //Calculate items amount
     useEffect(() => {
@@ -51,7 +55,7 @@ const TableForm = ({
         let sum = 0
 
         for (let i = 0; i < rows.length; i++) {
-            if(rows[i].className === "amount") {
+            if (rows[i].className === "amount") {
                 sum += isNaN(rows[i].innerHTML) ? 0 : parseInt(rows[i].innerHTML)
                 setTotal(sum)
             }
@@ -71,6 +75,16 @@ const TableForm = ({
     const deleteRow = (id) => {
         setList(list.filter((row) => row.id !== id))
     }
+
+    function inputLimit () {
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.oninput = () => {
+                if(input.value.length > input.maxLength) input.value = input.value.slice(0, input.maxLength);
+            }
+        })
+    }
+    inputLimit()
+
     return (
         <div>
             <form className="md:mt-20" onSubmit={handleSubmit}>
@@ -81,6 +95,7 @@ const TableForm = ({
                         name="description"
                         id="description"
                         placeholder="Item description"
+                        maxLength="32"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                     />
@@ -90,10 +105,13 @@ const TableForm = ({
                     <div className="flex flex-col">
                         <label htmlFor="quantity">Quantity</label>
                         <input
-                            type="text"
+                            type="number"
                             name="quantity"
                             id="quantity"
                             placeholder="Quantity"
+                            min="1"
+                            max="99999999"
+                            maxLength="8"
                             value={quantity}
                             onChange={(e) => setQuantity(e.target.value)}
                         />
@@ -101,10 +119,13 @@ const TableForm = ({
                     <div className="flex flex-col">
                         <label htmlFor="price">Price</label>
                         <input
-                            type="text"
+                            type="number"
                             name="price"
                             id="price"
                             placeholder="Price"
+                            min="1"
+                            max="99999999"
+                            maxLength="8"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
                         />
