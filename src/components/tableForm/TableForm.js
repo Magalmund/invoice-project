@@ -1,94 +1,223 @@
 import React, {useState, useEffect} from 'react';
 import {v4 as uuidv4} from "uuid"
-import {AiOutlineDelete, AiOutlineEdit} from "react-icons/ai"
+import {AiOutlineDelete} from "react-icons/ai"
+import {setDate} from "../../services";
 
 
 const TableForm = ({
-                       description,
-                       setDescription,
-                       quantity,
-                       setQuantity,
+
                        amount,
                        setAmount,
-                       price,
-                       setPrice,
                        list,
                        setList,
                        total,
-                       setTotal
+                       setTotal,
+                       currentDate,
+                       setCurrentDate,
+                       dueDate,
+                       setDueDate,
+                       formValues,
+                       setFormValues,
+                       showInvoice,
+                       setShowInvoice
                    }) => {
-    const [isEditing, setIsEditing] = useState(false)
-
-    //Submit form function
-    const handleSubmit = (e) => {
-        e.preventDefault()
-
-        if (!description || !quantity || !price) {
-            alert("Please fill all inputs")
-        } else {
-            const newItems = {
-                id: uuidv4(),
-                description,
-                quantity,
-                price,
-                amount
-            }
-            setDescription("")
-            setQuantity("")
-            setPrice("")
-            setAmount("")
-            setList([...list, newItems])
-            setIsEditing(false)
-        }
-    }
     //Calculate items amount
     useEffect(() => {
         const calculateAmount = (amount) => {
-            setAmount(quantity * price)
+            setAmount(formValues.quantity * formValues.price)
         }
         calculateAmount(amount)
-    }, [amount, price, quantity, setAmount])
+    }, [amount, setAmount, formValues.price, formValues.quantity])
 
     //Calculate total amount of items in table
     useEffect(() => {
-        let rows = document.querySelectorAll(".amount")
-        let sum = 0
+        let total = 0;
+        list.forEach(({ price, amount }) => {
+            total += amount * Number(price);
+        })
+        setTotal(total.toFixed(2))
+    }, [list])
 
-        for (let i = 0; i < rows.length; i++) {
-            if (rows[i].className === "amount") {
-                sum += isNaN(rows[i].innerHTML) ? 0 : parseInt(rows[i].innerHTML)
-                setTotal(sum)
-            }
-        }
-    })
-
-    //Edit button
-    const editRow = (id) => {
-        const editingRow = list.find((row) => row.id === id)
-        setList(list.filter((row) => row.id !== id))
-        setIsEditing(true)
-        setDescription(editingRow.description)
-        setQuantity(editingRow.quantity)
-        setPrice(editingRow.price)
-    }
     //Delete button
     const deleteRow = (id) => {
         setList(list.filter((row) => row.id !== id))
     }
 
-    function inputLimit () {
+    function inputLimit() {
         document.querySelectorAll('input[type="number"]').forEach(input => {
             input.oninput = () => {
-                if(input.value.length > input.maxLength) input.value = input.value.slice(0, input.maxLength);
+                if (input.value.length > input.maxLength) input.value = input.value.slice(0, input.maxLength);
             }
         })
     }
+
     inputLimit()
+
+    const [formErrors, setFormErrors] = useState({})
+    const [isSubmit, setIsSubmit] = useState(false)
+    const [successMessage, setSuccessMessage] = useState(false)
+    const [errorMessage, setErrorMessage] = useState(false)
+
+    const handleChange = (e) => {
+        const {name, value} = e.target;
+        setFormValues({...formValues, [name]: value});
+        console.log(formValues)
+    }
+
+    //Submit form function
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        setIsSubmit(true);
+        setShowInvoice(true)
+    }
+
+    //Save inputs values
+    const tableInput = (e) => {
+        e.preventDefault()
+
+        const validationResult = validateTable(formValues);
+        if (Object.keys(validationResult).length !== 0) {
+            // alert("Please fill all inputs ")
+            console.log(formErrors)
+            setFormErrors(validationResult)
+            setSuccessMessage(false)
+        } else {
+            setSuccessMessage(true)
+            setFormErrors({})
+            const newItems = {
+                ...formValues,
+                amount,
+                id: uuidv4()
+            }
+            setFormValues({...formValues, description: "", quantity: 1, price: 0})
+            setAmount("")
+            setList([...list, newItems])
+        }
+    }
+
+    // let messageInput
+    // if(errorMessage && !successMessage){
+    //     messageInput = <div className="flex justify-center text-red-500 font-semibold">Please fill all inputs!</div>
+    // } else if (!errorMessage && successMessage){
+    //     messageInput = <div className="flex justify-center text-green-500 font-semibold">Saved successfully!</div>
+    // }
+
+
+    useEffect(() => {
+        if (Object.keys(formErrors).length === 0 && isSubmit) {
+        }
+    }, [formErrors, isSubmit])
+
+    const validateTable = (values) => {
+        const errors = {}
+        if (!values.clientName) {
+            errors.clientName = "Description is required!"
+        }
+        if (!values.clientEmail) {
+            errors.clientEmail = "Email is required!"
+        }
+        if (!values.description) {
+            errors.description = "Description is required!"
+        }
+        if (!values.quantity) {
+            errors.quantity = "Quantity is required!"
+        }
+        if (!values.price) {
+            errors.price = "Price is required!"
+        }
+        console.log(errors)
+        return errors
+    }
+
+    const errorsList = Object.values(formErrors);
 
     return (
         <div>
+            {/*{Object.keys(formErrors).length === 0 && successMessage*/}
+            {/*    ?*/}
+            {/*    (<div className="flex justify-center text-green-500 font-semibold">Saved successfully!</div>)*/}
+            {/*    :*/}
+            {/*    (<div className="flex justify-center text-red-500 font-semibold">Please fill all inputs!</div>)*/}
+            {/*}*/}
+
+            {/*{messageInput}*/}
+            {errorsList.length !== 0 && <div className="flex justify-center text-red-500 font-semibold">
+                <ul>{
+                    errorsList.map((errorMsg, i) => {
+                        return <li key={`${i}-${errorMsg}`}>{errorMsg}</li>
+                    })
+                }</ul>
+            </div>
+            }
+
+            {successMessage && <div className="flex justify-center text-green-500 font-semibold">Saved successfully!</div>
+            }
+
             <form className="md:mt-20" onSubmit={handleSubmit}>
-                <div className="flex flex-col">
+                <article className="mb-10 md:grid grid-cols-2 gap-10 md:mt-20">
+                    <div className="flex flex-col">
+                        <label htmlFor="clientName">Name</label>
+                        <input
+                            type="text"
+                            name="clientName"
+                            id="clientName"
+                            placeholder="Name"
+                            autoComplete="off"
+                            maxLength="32"
+                            value={formValues.clientName}
+                            onChange={handleChange}
+                        />
+                        <p className="text-red-500">{formErrors.clientName}</p>
+                    </div>
+                    <div className="flex flex-col">
+                        <label htmlFor="clientEmail">Email</label>
+                        <input
+                            type="email"
+                            name="clientEmail"
+                            id="clientEmail"
+                            placeholder="Email"
+                            autoComplete="off"
+                            maxLength="32"
+                            value={formValues.clientEmail}
+                            onChange={handleChange}
+                        />
+                        <p className="text-red-500">{formErrors.clientEmail}</p>
+                    </div>
+                </article>
+
+                <article className="mb-10 md:grid grid-cols-2 gap-10">
+                    <div className="flex flex-col">
+                        <label htmlFor="invoiceDate">Invoice date</label>
+                        <input
+                            type="date"
+                            name="invoiceDate"
+                            id="invoiceDate"
+                            placeholder="Invoice date"
+                            autoComplete="off"
+                            value={currentDate}
+                            onChange={(e) => {
+                                setCurrentDate(e.target.value)
+                                const difference = parseInt((new Date(dueDate) - new Date(e.target.value)) / (1000 * 60 * 60 * 24), 10)
+                                if (difference < 7) {
+                                    setDueDate(setDate(new Date(e.target.value), 7))
+                                }
+                            }}/>
+                    </div>
+                    <div className="flex flex-col">
+                        <label htmlFor="dueDate">Due date</label>
+                        <input
+                            type="date"
+                            name="dueDate"
+                            id="dueDate"
+                            placeholder="Due date"
+                            autoComplete="off"
+                            value={dueDate}
+                            onChange={(e) => setDueDate(e.target.value)}/>
+                    </div>
+                </article>
+
+                <div className="mb-10 flex flex-col">
+
                     <label htmlFor="description">Item description</label>
                     <input
                         type="text"
@@ -96,13 +225,14 @@ const TableForm = ({
                         id="description"
                         placeholder="Item description"
                         maxLength="32"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        value={formValues.description}
+                        onChange={handleChange}
                     />
+                    <p className="text-red-500">{formErrors.description}</p>
                 </div>
 
                 <article className="md:grid grid-cols-3 gap-10">
-                    <div className="flex flex-col">
+                    <div className="mb-10 flex flex-col">
                         <label htmlFor="quantity">Quantity</label>
                         <input
                             type="number"
@@ -112,74 +242,87 @@ const TableForm = ({
                             min="1"
                             max="99999999"
                             maxLength="8"
-                            value={quantity}
-                            onChange={(e) => setQuantity(e.target.value)}
+                            value={formValues.quantity}
+                            onChange={handleChange}
                         />
+                        <p className="text-red-500">{formErrors.quantity}</p>
                     </div>
-                    <div className="flex flex-col">
+                    <div className="mb-10 flex flex-col">
                         <label htmlFor="price">Price</label>
                         <input
                             type="number"
                             name="price"
                             id="price"
                             placeholder="Price"
-                            min="1"
+                            min="0"
                             max="99999999"
                             maxLength="8"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
+                            value={formValues.price}
+                            onChange={handleChange}
                         />
+                        <p className="text-red-500">{formErrors.price}</p>
                     </div>
-                    <div className="flex flex-col">
+                    <div className="mb-10 flex flex-col">
                         <label htmlFor="amount">Amount</label>
                         <p>{amount}</p>
                     </div>
                 </article>
-                <button type="submit"
-                        className=" mb-5 bg-blue-500 text-white font-bold py-2 px-8 rounded shadow border-2 border-blue-500 hover:bg-transparent hover:text-blue-500 transition-all duration-300">{isEditing ? "Accept changes" : "Add item"}
-                </button>
+
+                <table width="100%" className="mb-10">
+                    <thead>
+                    <tr className="bg-gray-100 p-1">
+                        <td className="font-bold">Item description</td>
+                        <td className="font-bold">Quantity</td>
+                        <td className="font-bold">Price</td>
+                        <td className="font-bold">Amount</td>
+                        <td className="font-bold">Delete</td>
+                    </tr>
+                    </thead>
+                    {list.map(({id, description, quantity, price, amount}) => (
+                        <React.Fragment key={id}>
+                            <tbody>
+                            <tr>
+                                <td className="description">{description}</td>
+                                <td className="quantity">{quantity}</td>
+                                <td className="price">{price}</td>
+                                <td className="amount">{amount}</td>
+                                <td>
+                                    <button
+                                        onClick={() => deleteRow(id)}><AiOutlineDelete
+                                        className="text-red-500 font-bold text-xl"
+                                    />
+                                    </button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </React.Fragment>
+                    ))}
+
+                </table>
+
+                <div>
+                    <h2 className="mb-5 flex items-end justify-end text-gray-800 text-4xl font-bold">
+                        Total: {total.toLocaleString()}
+                    </h2>
+                </div>
+                <article className="md:grid grid-cols-2 gap-10">
+
+                    <button
+                        type="submit"
+                        className="bg-blue-500 text-white font-bold py-2 px-8 rounded shadow border-2 border-blue-500 hover:bg-transparent hover:text-blue-500 transition-all duration-300"
+                    >
+                        Preview invoice
+                    </button>
+
+                    <button
+                        onClick={tableInput}
+                        className="bg-blue-500 text-white font-bold py-2 px-8 rounded shadow border-2 border-blue-500 hover:bg-transparent hover:text-blue-500 transition-all duration-300">
+                        Save information
+                    </button>
+
+                </article>
             </form>
 
-
-            <table width="100%" className="mb-10">
-                <thead>
-                <tr className="bg-gray-100 p-1">
-                    <td className="font-bold">Item description</td>
-                    <td className="font-bold">Quantity</td>
-                    <td className="font-bold">Price</td>
-                    <td className="font-bold">Amount</td>
-                    <td className="font-bold">Delete</td>
-                    <td className="font-bold">Edit</td>
-                </tr>
-                </thead>
-                {list.map(({id, description, quantity, price, amount}) => (
-                    <React.Fragment key={id}>
-                        <tbody>
-                        <tr>
-                            <td className="description">{description}</td>
-                            <td className="quantity">{quantity}</td>
-                            <td className="price">{price}</td>
-                            <td className="amount">{amount}</td>
-                            <td>
-                                <button onClick={() => deleteRow(id)}><AiOutlineDelete
-                                    className="text-red-500 font-bold text-xl"/></button>
-                            </td>
-                            <td>
-                                <button onClick={() => editRow(id)}><AiOutlineEdit
-                                    className="text-green-500 font-bold text-xl"/></button>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </React.Fragment>
-                ))}
-
-            </table>
-
-            <div>
-                <h2 className="flex items-end justify-end text-gray-800 text-4xl font-bold">
-                    Total: {total.toLocaleString()}
-                </h2>
-            </div>
         </div>
     );
 };
