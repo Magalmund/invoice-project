@@ -36,7 +36,7 @@ const TableForm = ({
             total += amount * Number(price);
         })
         setTotal(total.toFixed(2))
-    }, [list])
+    }, [list, setTotal])
 
     //Delete button
     const deleteRow = (id) => {
@@ -56,12 +56,10 @@ const TableForm = ({
     const [formErrors, setFormErrors] = useState({})
     const [isSubmit, setIsSubmit] = useState(false)
     const [successMessage, setSuccessMessage] = useState(false)
-    const [errorMessage, setErrorMessage] = useState(false)
 
     const handleChange = (e) => {
         const {name, value} = e.target;
         setFormValues({...formValues, [name]: value});
-        console.log(formValues)
     }
 
     //Submit form function
@@ -77,8 +75,6 @@ const TableForm = ({
 
         const validationResult = validateTable(formValues);
         if (Object.keys(validationResult).length !== 0) {
-            // alert("Please fill all inputs ")
-            console.log(formErrors)
             setFormErrors(validationResult)
             setSuccessMessage(false)
         } else {
@@ -95,14 +91,6 @@ const TableForm = ({
         }
     }
 
-    // let messageInput
-    // if(errorMessage && !successMessage){
-    //     messageInput = <div className="flex justify-center text-red-500 font-semibold">Please fill all inputs!</div>
-    // } else if (!errorMessage && successMessage){
-    //     messageInput = <div className="flex justify-center text-green-500 font-semibold">Saved successfully!</div>
-    // }
-
-
     useEffect(() => {
         if (Object.keys(formErrors).length === 0 && isSubmit) {
         }
@@ -110,11 +98,14 @@ const TableForm = ({
 
     const validateTable = (values) => {
         const errors = {}
+        const regex = /^(([^<>()\]\\.,;:\s@"]+(\.[^<>()\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         if (!values.clientName) {
             errors.clientName = "Description is required!"
         }
         if (!values.clientEmail) {
             errors.clientEmail = "Email is required!"
+        } else if(!regex.test(values.clientEmail)){
+            errors.clientEmail = "This isn't valid email format!"
         }
         if (!values.description) {
             errors.description = "Description is required!"
@@ -125,7 +116,6 @@ const TableForm = ({
         if (!values.price) {
             errors.price = "Price is required!"
         }
-        console.log(errors)
         return errors
     }
 
@@ -133,14 +123,6 @@ const TableForm = ({
 
     return (
         <div>
-            {/*{Object.keys(formErrors).length === 0 && successMessage*/}
-            {/*    ?*/}
-            {/*    (<div className="flex justify-center text-green-500 font-semibold">Saved successfully!</div>)*/}
-            {/*    :*/}
-            {/*    (<div className="flex justify-center text-red-500 font-semibold">Please fill all inputs!</div>)*/}
-            {/*}*/}
-
-            {/*{messageInput}*/}
             {errorsList.length !== 0 && <div className="flex justify-center text-red-500 font-semibold">
                 <ul>{
                     errorsList.map((errorMsg, i) => {

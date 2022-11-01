@@ -52,8 +52,6 @@ function App() {
                         <div className="flex flex-col justify-center">
                             <article>
                                 <TableForm
-                                    // clientData={clientData}
-                                    // setClientData={setClientData}
                                     currentDate={currentDate}
                                     setCurrentDate={setCurrentDate}
                                     dueDate={dueDate}
